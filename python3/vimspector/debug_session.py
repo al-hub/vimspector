@@ -98,52 +98,22 @@ class DebugSession( object ):
                          'application.' )
       return
 
-    configuration_name = launch.SelectConfiguration( launch_variables,
-                                                     configurations )
-    if not configuration_name or configuration_name not in configurations:
-      return
-
-    configuration = configurations[ configuration_name ]
-    adapter = configuration.get( 'adapter' )
-
-    if isinstance( adapter, str ):
-      adapter_dict = adapters.get( adapter )
-
-      if adapter_dict is None:
-        suggested_gadgets = installer.FindGadgetForAdapter( adapter )
-        if suggested_gadgets:
-          response = utils.AskForInput(
-            f"The specified adapter '{adapter}' is not "
-            "installed. Would you like to install the following gadgets? ",
-            ' '.join( suggested_gadgets ) )
-          if response:
-            new_launch_variables = dict( launch_variables )
-            new_launch_variables[ 'configuration' ] = configuration_name
-
-            installer.RunInstaller(
-              self._api_prefix,
-              False, # Don't leave open
-              *shlex.split( response ),
-              then = lambda: self.Start( new_launch_variables ) )
-            return
-          elif response is None:
-            return
-
-        utils.UserMessage( f"The specified adapter '{adapter}' is not "
-                           "available. Did you forget to run "
-                           "'install_gadget.py'?",
-                           persist = True,
-                           error = True )
-        return
-
-      adapter = adapter_dict
-
-
     if launch_config_file:
       self._workspace_root = os.path.dirname( launch_config_file )
     else:
       self._workspace_root = os.path.dirname( current_file )
 
+    configuration_name, configuration = launch.SelectConfiguration(
+      launch_variables,
+      configurations )
+    adapter = launch.SelectAdapter( self._api_prefix,
+                                    configuration_name,
+                                    configuration,
+                                    adapters,
+                                    launch_variables,
+                                    self )
+    if not adapter:
+      return
     try:
       launch.ResolveConfiguration( adapter,
                                    configuration,

@@ -17,8 +17,9 @@ import os
 import logging
 import json
 import glob
+import shlex
 
-from vimspector import install, utils
+from vimspector import install, installer, utils
 from vimspector.vendor.json_minify import minify
 
 _logger = logging.getLogger( __name__ )
@@ -111,7 +112,55 @@ def SelectConfiguration( launch_variables, configurations ):
         'Which launch configuration?',
         sorted( configurations.keys() ) )
 
-  return configuration_name
+  if not configuration_name or configuration_name not in configurations:
+    return None, None
+
+  configuration = configurations[ configuration_name ]
+
+  return configuration_name, configuration
+
+
+def SelectAdapter( api_prefix,
+                   configuration_name,
+                   configuration,
+                   adapters,
+                   launch_variables,
+                   debug_session ):
+  adapter =  configuration.get( 'adapter' )
+
+  if isinstance( adapter, str ):
+    adapter_dict = adapters.get( adapter )
+
+    if adapter_dict is None:
+      suggested_gadgets = installer.FindGadgetForAdapter( adapter )
+      if suggested_gadgets:
+        response = utils.AskForInput(
+          f"The specified adapter '{adapter}' is not "
+          "installed. Would you like to install the following gadgets? ",
+          ' '.join( suggested_gadgets ) )
+        if response:
+          new_launch_variables = dict( launch_variables )
+          new_launch_variables[ 'configuration' ] = configuration_name
+
+          installer.RunInstaller(
+            api_prefix,
+            False, # Don't leave open
+            *shlex.split( response ),
+            then = debug_session.Start( new_launch_variables ) )
+          return
+        elif response is None:
+          return None
+
+      utils.UserMessage( f"The specified adapter '{adapter}' is not "
+                         "available. Did you forget to run "
+                         "'install_gadget.py'?",
+                         persist = True,
+                         error = True )
+      return None
+
+    adapter = adapter_dict
+
+  return adapter
 
 
 def ResolveConfiguration( adapter,
