@@ -87,7 +87,7 @@ class DebugSession( object ):
 
     current_file = utils.GetBufferFilepath( vim.current.buffer )
     filetypes = utils.GetBufferFiletypes( vim.current.buffer )
-    adapters = launch.GetAdapters( current_file, filetypes )
+    adapters = launch.GetAdapters( current_file )
     configurations, launch_config_file = launch.GetConfigurations( adapters,
                                                                    current_file,
                                                                    filetypes )
@@ -107,11 +107,11 @@ class DebugSession( object ):
       launch_variables,
       configurations )
     adapter = launch.SelectAdapter( self._api_prefix,
+                                    self,
                                     configuration_name,
                                     configuration,
                                     adapters,
-                                    launch_variables,
-                                    self )
+                                    launch_variables )
     if not adapter:
       return
 

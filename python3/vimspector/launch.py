@@ -71,7 +71,7 @@ def GetConfigurations( adapters, current_file, filetypes ):
     with open( launch_config_file, 'r' ) as f:
       database = json.loads( minify( f.read() ) )
       adapters.update( database.get( 'adapters' ) or {} )
-      configurations.update( database.get( 'configurations' or {} ) )
+      configurations.update( database.get( 'configurations' ) or {} )
 
   # We return the last config file inspected which is the most specific one
   # (i.e. the project-local one)
