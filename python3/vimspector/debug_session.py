@@ -622,7 +622,7 @@ class DebugSession( object ):
     self.SetCurrentFrame( None )
 
   @RequiresUI()
-  def SetCurrentFrame( self, frame ):
+  def SetCurrentFrame( self, frame, reason = '' ):
     if not frame:
       self._stackTraceView.Clear()
       self._variablesView.Clear()
@@ -635,6 +635,13 @@ class DebugSession( object ):
       self._stackTraceView.SetSyntax( self._codeView.current_syntax )
       self._variablesView.LoadScopes( frame )
       self._variablesView.EvaluateWatches()
+
+      if reason == 'stopped':
+        source = frame.get( 'source' ) or {}
+        if 'path' in source:
+          self._breakpoints.ClearTemporaryBreakpoints(
+            source[ 'path' ],
+            frame[ 'line' ] )
 
     return True
 

@@ -101,6 +101,15 @@ function! vimspector#ClearLineBreakpoint( file_name, line_num ) abort
 endfunction
 
 
+function! vimspector#RunToCursor() abort
+  call vimspector#SetLineBreakpoint(
+        \ expand( '%' ),
+        \ line( '.' ),
+        \ { 'temporary': 1 } )
+  call vimspector#Continue()
+endfunction
+
+
 function! vimspector#AddFunctionBreakpoint( function, ... ) abort
   if !s:enabled
     return

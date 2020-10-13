@@ -209,6 +209,16 @@ class ProjectBreakpoints( object ):
     self.UpdateUI()
 
 
+  def ClearTemporaryBreakpoints( self, file_name, line_num ):
+    bp, index = self._FindLineBreakpoint( file_name, line_num )
+    if bp is None:
+      return
+    if bp[ 'options' ].get( 'temporary' ):
+      self._DeleteLineBreakpoint( bp, file_name, index )
+      self.UpdateUI()
+
+
+
   def AddFunctionBreakpoint( self, function, options ):
     self._func_breakpoints.append( {
       'state': 'ENABLED',
